@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/CarsonSlovoka/excelize_demo/internal/excel/style"
 	"github.com/xuri/excelize/v2"
 	"log"
 	"reflect"
@@ -34,59 +35,20 @@ func init() {
 
 func main() {
 	f := excelize.NewFile()
-
-	alignCenter := &excelize.Alignment{
-		Horizontal: "center",
-		Vertical:   "center",
-	}
-
-	alicCenterStyleID, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{
-			Size:   48,
-			Family: "Consolas",
-		},
-		Alignment: alignCenter,
-	})
-
-	nameStyleID, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{
-			Size:   48,
-			Family: "Consolas",
-		},
-		Alignment: alignCenter,
-	})
-
-	_, _ = f.NewStyle(&excelize.Style{
-		Border: []excelize.Border{
-			{Type: "left", Color: "000000", Style: 5},
-			{Type: "top", Color: "000000", Style: 5},
-			{Type: "bottom", Color: "000000", Style: 5},
-			{Type: "right", Color: "000000", Style: 5},
-			// {Type: "diagonalDown", Color: "000000", Style: 5},
-			// {Type: "diagonalUp", Color: "000000", Style: 5},
-		},
-	})
-
-	itemStyleID, err := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{
-			Size:   24,
-			Family: "Arial",
-		},
-		Alignment: alignCenter,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+	sM := style.NewMaker(f)
 
 	row := 1
+	var cell string
 	for numData, g := range testData {
-		numData++ // 從1開始
+		numData++ // let start index from 1
 
 		// A
 		_ = f.SetCellValue("Sheet1", fmt.Sprintf("A%d", row), numData)
+		cell, _ = excelize.CoordinatesToCellName(1, row)
+		_ = f.SetCellStyle("Sheet1", cell, cell, sM.MustNewStyleID(style.AlignmentCenter, &excelize.Font{Size: 48}))
 		topLeftCell := fmt.Sprintf("A%d", row+1)
 		_ = f.SetCellValue("Sheet1", topLeftCell, g.Name)
-		_ = f.SetCellStyle("Sheet1", topLeftCell, topLeftCell, nameStyleID)
+		_ = f.SetCellStyle("Sheet1", topLeftCell, topLeftCell, sM.MustNewStyleID(style.AlignmentCenter, &excelize.Font{Size: 24, Family: "Consolas"}))
 		if len(g.Items) == 0 {
 			row += 2
 			continue
@@ -107,23 +69,29 @@ func main() {
 			}
 
 			col := dataBeginCol + idx
-			cell, _ := excelize.CoordinatesToCellName(col, row)
+			cell, _ = excelize.CoordinatesToCellName(col, row)
 			_ = f.SetCellValue("Sheet1", cell, idx+1) // index 1, 2, ...
-			_ = f.SetCellStyle("Sheet1", cell, cell, alicCenterStyleID)
+			_ = f.SetCellStyle("Sheet1", cell, cell, sM.MustNewStyleID(style.AlignmentCenter))
 
 			cell, _ = excelize.CoordinatesToCellName(col, row+1)
 			_ = f.SetCellValue("Sheet1", cell, string(item.Ch))
-			_ = f.SetCellStyle("Sheet1", cell, cell, itemStyleID)
+			_ = f.SetCellStyle("Sheet1", cell, cell, sM.MustNewStyleID(
+				style.AlignmentCenter,
+				&excelize.Font{Size: 18, Family: "Arial"}),
+			)
 
 			// Formula
 			cell, _ = excelize.CoordinatesToCellName(col, row+2)
 			_ = f.SetCellFormula("Sheet1", cell, fmt.Sprintf(`=DEC2HEX("%s")`, item.Unicode))
-			_ = f.SetCellStyle("Sheet1", cell, cell, itemStyleID)
+			_ = f.SetCellStyle("Sheet1", cell, cell, sM.MustNewStyleID(
+				style.AlignmentCenter,
+				&excelize.Font{Size: 18, Family: "Arial"}),
+			)
 		}
 		row += g.Items[0].NumFields() + 1
 	}
 
-	if err = f.SaveAs("temp.output.xlsx"); err != nil {
+	if err := f.SaveAs("temp.output.xlsx"); err != nil {
 		log.Fatalf("Error saving the Excel file: %v\n", err)
 	}
 }
