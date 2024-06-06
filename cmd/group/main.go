@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/CarsonSlovoka/excelize_demo/internal/excel/style"
+	"github.com/CarsonSlovoka/go-excel/style"
 	"github.com/xuri/excelize/v2"
 	"log"
 	"reflect"

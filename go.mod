@@ -1,4 +1,4 @@
-module github.com/CarsonSlovoka/excelize_demo
+module github.com/CarsonSlovoka/go-excel
 
 go 1.22.0
 
